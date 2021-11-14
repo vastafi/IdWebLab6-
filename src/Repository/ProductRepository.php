@@ -2,8 +2,11 @@
 
 namespace App\Repository;
 
+
+use App\Entity\Image;
 use App\Entity\Product;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -19,32 +22,67 @@ class ProductRepository extends ServiceEntityRepository
         parent::__construct($registry, Product::class);
     }
 
-    // /**
-    //  * @return Product[] Returns an array of Product objects
-    //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('p.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+    /**
+     * @param $category
+     * @param $name
+     * @param $limit
+     * @param $page
+     * @return Product[] Returns an array of Product objects
+     */
 
-    /*
-    public function findOneBySomeField($value): ?Product
+    public function filter(?string $category, ?string $name, int $limit, int $page): array
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
+        return $this
+            ->getFiltrationQuery($category, $name)
+            ->setFirstResult($limit * ($page - 1))
+            ->setMaxResults($limit)
             ->getQuery()
-            ->getOneOrNullResult()
-        ;
+            ->getResult();
     }
-    */
-}
+
+    public function countPages(?string $category, ?string $name, int $limit): int
+    {
+        $amountOfProducts = $this
+            ->getFiltrationQuery($category, $name)
+            ->select("COUNT(p)")
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return ceil($amountOfProducts / $limit);
+    }
+
+    /**
+     * @param string|null $category
+     * @param string|null $name
+     * @return QueryBuilder
+     */
+    protected function getFiltrationQuery(?string $category, ?string $name): QueryBuilder
+    {
+        $query = $this->createQueryBuilder('p');
+
+        if ($category) {
+            $query->andWhere('LOWER(p.category ) = :category')
+                ->setParameter('category', strtolower($category));
+        }
+        if ($name) {
+            $query->andWhere('LOWER(p.name) LIKE :name')
+                ->setParameter('name',  strtolower($name . "%"));
+        }
+
+        $query->orderBy('p.code', 'ASC');
+        return $query;
+    }
+
+    public function getCategories(): array
+    {
+        $categories = $this
+            ->createQueryBuilder('product')
+            ->select("DISTINCT product.category")
+            ->getQuery()
+            ->getResult();
+
+        return array_column($categories, 'category');
+    }
+
+  }
+
