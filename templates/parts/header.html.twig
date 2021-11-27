@@ -84,7 +84,6 @@
                             {% endif %}
                         {% endif %}
 
-
                         {% if is_granted('ROLE_ADMIN') and not ("/admin/" in app.request.requestUri) %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ path('adminpr') }}">ADMIN PAGE</a>
@@ -102,7 +101,7 @@
                                     <div class="dropdown-menu">
                                         <div class="dropdown-scrollbar">
                                             <form class="px-4 py-3">
-                                                <h4 align="center">Shopping cart</h4>
+                                                <h4 align="center">Cart</h4>
                                                 <div class="content">
                                                     <div class="cart-content"></div>
                                                 </div>
@@ -132,6 +131,7 @@
                                 </button>
                             </a>
                         {% endif %}
+
 
                         {% if "user" not in app.request.requestUri %}
                         {% if "image/gallery" not in app.request.requestUri %}
